@@ -3,6 +3,8 @@ const kafka = require('kafka-node')
 const { default: mongoose } = require('mongoose')
 const app = express()
 
+app.use(express.json())
+
 const isRunning = () => {
     mongoose.connect(process.env.MONGO_URL)
     const User = new mongoose.model('user',{
@@ -11,9 +13,8 @@ const isRunning = () => {
         password: String
     })
 
-    app.use(express.json())
-
     const client = new kafka.KafkaClient({kafkaHost: process.env.KAFKA_BOOTSTRAP_SERVERS})
+    console.log(client)
     const consumer = new kafka.Consumer(client, [{topic: process.env.KAFKA_TOPIC}], {
         autoCommit: false
     })
@@ -28,7 +29,6 @@ const isRunning = () => {
         console.log(err)
     })
 }
-setTimeout(isRunning, 5000)
-
+setTimeout(isRunning, 2000)
 
 app.listen(process.env.PORT)
