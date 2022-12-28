@@ -9,24 +9,27 @@ const User = db.define('user', {
     email: sequelize.STRING,
     password: sequelize.STRING
 })
-db.sync({forcef:true})
+db.sync({force: true})
 
 app.use(express.json())
 
-const client = new kafka.KafkaClient({kafkaHost: process.env.KAFKA_BOOTSTRAP_SERVERS})
-const producer = new kafka.Producer(client)
-producer.on('ready', () => {
-    console.log('producer ready')
-    app.post('/', async (req, res) => {
-        producer.send([{topic: process.env.KAFKA_TOPIC, messages: JSON.stringify(req.body)}], async (err, data) => {
-            if(err) console.log(err)
-            else {
-                await User.create(req.body);
-                res.send(req.body)
-            } 
+const isRunning = () => {
+    const client = new kafka.KafkaClient({kafkaHost: process.env.KAFKA_BOOTSTRAP_SERVERS})
+    const producer = new kafka.Producer(client)
+    producer.on('ready', () => {
+        console.log('producer ready')
+        app.post('/', async (req, res) => {
+            producer.send([{topic: process.env.KAFKA_TOPIC, messages: JSON.stringify(req.body)}], async (err, data) => {
+                if(err) console.log(err)
+                else {
+                    await User.create(req.body);
+                    res.send(req.body)
+                } 
+            })
         })
     })
-})
+}
+setTimeout(isRunning, 5000)
 
 
 
